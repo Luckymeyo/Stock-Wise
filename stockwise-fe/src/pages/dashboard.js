@@ -8,7 +8,7 @@ export async function renderDashboardPage() {
   let inventoryData = [];
 
   try {
-    const res = await fetch('http://localhost:3000/api/inventory');
+    const res = await fetch('https://stock-wise-production.up.railway.app/api/inventory');
     inventoryData = await res.json();
     if (Array.isArray(inventoryData)) {
       await saveToDB('inventory', inventoryData);
