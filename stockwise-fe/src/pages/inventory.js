@@ -9,7 +9,7 @@ export function renderInventoryPage() {
 
   async function fetchInventory() {
     try {
-      const res = await fetch('http://localhost:3000/api/inventory');
+      const res = await fetch('https://stock-wise-production.up.railway.app/api/inventory');
       const data = await res.json();
       await saveInventoryToDB('inventory',data);
       return data;
@@ -91,7 +91,7 @@ export function renderInventoryPage() {
         return swal("Invalid Pizza", `Must be one of:\n${pizzaList.join(', ')}`, "error");
       }
 
-      const res = await fetch('http://localhost:3000/api/inventory', {
+      const res = await fetch('https://stock-wise-production.up.railway.app/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, predicted: +predicted, actual: +actual }),
@@ -144,7 +144,7 @@ export function renderInventoryPage() {
 
       const [predicted, actual] = formValues;
 
-      const res = await fetch(`http://localhost:3000/api/inventory/name/${encodeURIComponent(selectedName)}`, {
+      const res = await fetch(`https://stock-wise-production.up.railway.app/api/inventory/name/${encodeURIComponent(selectedName)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ predicted: +predicted, actual: +actual }),
@@ -179,9 +179,9 @@ export function renderInventoryPage() {
       const selectedName = select.value;
       if (!selectedName) return swal("Error", "No pizza selected", "error");
 
-      await fetch(`http://localhost:3000/api/inventory/name/${encodeURIComponent(selectedName)}`, {
-        method: 'DELETE'
-      });
+    await fetch(`https://stock-wise-production.up.railway.app/api/inventory/name/${encodeURIComponent(selectedName)}`, {
+  method: 'DELETE'
+});
 
       await swal("Success", "Pizza has been deleted!", "success");
       await renderTable();
