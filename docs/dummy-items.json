@@ -1,6 +1,0 @@
-[
-    { "id": "001", "name": "Item A", "stock": 100, "alert": 20, "status": "OK" },
-    { "id": "002", "name": "Item B", "stock": 50, "alert": 30, "status": "Warning" },
-    { "id": "003", "name": "Item C", "stock": 10, "alert": 15, "status": "Critical" }
-  ]
-  
