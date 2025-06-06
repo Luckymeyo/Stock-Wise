@@ -3,16 +3,16 @@ import { renderLayout } from '../components/layout.js';
 export async function renderStockPredictionPage() {
   const app = document.getElementById('app');
 
-  // Simulasi data transaksi pizza (ini nanti diganti fetch dari API asli)
+  // Simulasi data transaksi pizza (akan diisi dengan fetch API)
   let transactions = [];
 
-  // Simulasi prediksi (dummy)
+  // Simulasi prediksi (null di awal)
   let predictionResult = null;
 
-  // Ambil data transaksi dari API (misal endpoint /transactions)
+  // Ambil data transaksi dari API
   async function fetchTransactions() {
     try {
-      const res = await fetch('http://localhost:8000/transactions');
+      const res = await fetch('https://backend-ml-production-9065.up.railway.app/transactions');
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       transactions = await res.json();
     } catch (error) {
@@ -30,7 +30,7 @@ export async function renderStockPredictionPage() {
     return totals;
   }
 
-  // Render tabel total pizza
+  // Render tabel total pizza yang terjual
   function renderTotalsTable() {
     const totals = calculateTotalPerPizza();
     const rows = Object.entries(totals).map(([pizza, qty]) => `
@@ -54,22 +54,36 @@ export async function renderStockPredictionPage() {
     `;
   }
 
-  // Render prediksi hasil
+  // Render prediksi hasil dari API
   function renderPrediction() {
-    if (!predictionResult) return '';
-    return `
-      <div class="mt-6 p-4 bg-green-100 border border-green-400 rounded max-w-md mx-auto">
-        <h3 class="font-semibold mb-2">Prediction for ${predictionResult.date}:</h3>
-        <ul>
-          ${Object.entries(predictionResult.predictions).map(([pizza, qty]) => `
-            <li>${pizza}: ${qty} pizzas</li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  }
+  if (!predictionResult) return '';
+  const rows = Object.entries(predictionResult.predictions).map(([pizza, qty]) => `
+    <tr>
+      <td class="border px-4 py-2">${pizza}</td>
+      <td class="border px-4 py-2 text-center">${qty}</td>
+    </tr>
+  `).join('');
 
-  // Render halaman utama
+  return `
+    <div class="mt-6 max-w-md mx-auto">
+      <h3 class="font-semibold mb-2">Prediction for ${predictionResult.date}:</h3>
+      <table class="min-w-full border-collapse border border-gray-300">
+        <thead>
+          <tr class="bg-green-200">
+            <th class="border border-gray-300 px-4 py-2 text-left">Pizza Name</th>
+            <th class="border border-gray-300 px-4 py-2 text-center">Predicted Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="2" class="text-center p-4 text-gray-500">No prediction data</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+
+  // Render halaman utama, termasuk tabel, form dan prediksi
   function renderPage() {
     const content = `
       <div class="min-h-screen bg-gray-100 p-6 text-gray-800">
@@ -80,7 +94,14 @@ export async function renderStockPredictionPage() {
 
         <form id="prediction-form" class="max-w-md mx-auto bg-white p-4 rounded shadow">
           <label for="predict_date" class="block mb-2 font-medium">Enter Date to Predict (YYYY-MM-DD):</label>
-          <input type="date" id="predict_date" name="predict_date" required class="w-full border rounded px-3 py-2 mb-4" />
+          <input
+            type="date"
+            id="predict_date"
+            name="predict_date"
+            value="2015-12-31"
+            required
+            class="w-full border rounded px-3 py-2 mb-4"
+          />
           <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Predict</button>
         </form>
 
@@ -90,31 +111,45 @@ export async function renderStockPredictionPage() {
 
     app.innerHTML = renderLayout(content);
 
-    // Form submit event
+    // Pasang event listener form submit setelah rendering
     const form = document.getElementById('prediction-form');
-    form.addEventListener('submit', e => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
 
       const date = form.predict_date.value;
       if (!date) return alert('Please enter a valid date.');
 
-      // Dummy prediksi: misal prediksi penjualan 10% dari total saat ini
-      const totals = calculateTotalPerPizza();
-      const predictions = {};
-      for (const [pizza, qty] of Object.entries(totals)) {
-        predictions[pizza] = Math.round(qty * 0.1); // 10% dari total penjualan
+      try {
+        const formData = new FormData();
+        formData.append('predict_date', date);
+
+        const response = await fetch('https://backend-ml-production-9065.up.railway.app/predict', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          alert(`Prediction error: ${data.error}`);
+          return;
+        }
+
+        // Update hasil prediksi dan render ulang halaman
+        predictionResult = {
+          date,
+          predictions: data.predictions
+        };
+
+        renderPage();
+      } catch (err) {
+        alert('Failed to fetch prediction from server.');
+        console.error(err);
       }
-
-      predictionResult = {
-        date,
-        predictions
-      };
-
-      renderPage();
     });
   }
 
-  // Fetch data dan render pertama kali
+  // Ambil data transaksi dan render halaman pertama kali
   await fetchTransactions();
   renderPage();
 }
