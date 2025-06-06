@@ -10,7 +10,7 @@ export async function renderTransactionPage() {
 
   async function fetchTransactions() {
     try {
-      const res = await fetch('http://localhost:8000/transactions');
+      const res = await fetch('https://backend-ml-production-9065.up.railway.app/transactions');
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       transactions = await res.json();
     } catch (error) {
@@ -135,7 +135,7 @@ export async function renderTransactionPage() {
         };
 
         try {
-            const res = await fetch('http://localhost:8000/transactions', {
+            const res = await fetch('https://backend-ml-production-9065.up.railway.app/transactions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newTransaction)
